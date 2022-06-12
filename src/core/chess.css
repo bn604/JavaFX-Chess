@@ -1,0 +1,19 @@
+#root {
+    
+    -fx-background-color: rgb(65, 47, 47);
+    
+}
+
+#start-game-button {
+    
+    -fx-font-size: 30;
+    -fx-text-fill: rgb(207, 194, 232);
+    -fx-background-color: rgb(89, 75, 63);
+    
+}
+
+#start-game-button:hover {
+
+    -fx-background-color: rgb(122, 120, 114);
+
+}
