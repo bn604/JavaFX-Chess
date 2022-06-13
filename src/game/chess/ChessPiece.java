@@ -1,6 +1,8 @@
 package game.chess;
 
 import game.GamePiece;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.image.Image;
 
 public final class ChessPiece
@@ -8,19 +10,96 @@ public final class ChessPiece
     
     public enum Type {
 
-        PAWN,
+        PAWN {
+            
+            @Override
+            protected boolean checkMove(final ChessBoard chessBoard,
+                                        final int sourceX, final int sourceY,
+                                        final int destinationX, final int destinationY,
+                                        final boolean playerOne) {
+                
+                return false;
+            }
+            
+        },
 
-        ROOK,
+        ROOK {
 
-        FLIP_ROOK,
+            @Override
+            protected boolean checkMove(final ChessBoard chessBoard,
+                                        final int sourceX, final int sourceY,
+                                        final int destinationX, final int destinationY,
+                                        final boolean playerOne) {
 
-        KNIGHT,
+                return false;
+            }
 
-        BISHOP,
+        },
 
-        QUEEN,
+        FLIP_ROOK {
 
-        KING;
+            @Override
+            protected boolean checkMove(final ChessBoard chessBoard,
+                                        final int sourceX, final int sourceY,
+                                        final int destinationX, final int destinationY,
+                                        final boolean playerOne) {
+
+                return ROOK.checkMove(chessBoard, sourceX, sourceY, destinationX, destinationY, playerOne);
+            }
+
+        },
+
+        KNIGHT {
+
+            @Override
+            protected boolean checkMove(final ChessBoard chessBoard,
+                                        final int sourceX, final int sourceY,
+                                        final int destinationX, final int destinationY,
+                                        final boolean playerOne) {
+
+                return false;
+            }
+
+        },
+
+        BISHOP {
+
+            @Override
+            protected boolean checkMove(final ChessBoard chessBoard,
+                                        final int sourceX, final int sourceY,
+                                        final int destinationX, final int destinationY,
+                                        final boolean playerOne) {
+
+                return false;
+            }
+
+        },
+
+        QUEEN {
+
+            @Override
+            protected boolean checkMove(final ChessBoard chessBoard,
+                                        final int sourceX, final int sourceY,
+                                        final int destinationX, final int destinationY,
+                                        final boolean playerOne) {
+
+                return false;
+            }
+
+        },
+
+        KING {
+
+            @Override
+            protected boolean checkMove(final ChessBoard chessBoard,
+                                        final int sourceX, final int sourceY,
+                                        final int destinationX, final int destinationY,
+                                        final boolean playerOne) {
+
+                return false;
+            }
+
+        };
 
         private final Image playerOneImage;
 
@@ -43,9 +122,16 @@ public final class ChessPiece
             return playerOne ? playerOneImage : playerTwoImage;
         }
 
+        protected abstract boolean checkMove(final ChessBoard chessBoard,
+                                             final int sourceX, final int sourceY,
+                                             final int destinationX, final int destinationY,
+                                             final boolean playerOne);
+        
     }
     
     private final Type type;
+    
+    private final ReadOnlyObjectWrapper<ChessTile> chessTileProperty = new ReadOnlyObjectWrapper<>();
     
     public ChessPiece(final ChessBoard chessBoard, final ChessPlayer chessPlayer, final Type type) {
         
@@ -60,6 +146,35 @@ public final class ChessPiece
     public Type getType() {
 
         return type;
+    }
+    
+    public ReadOnlyObjectProperty<ChessTile> chessTileProperty() {
+        
+        return chessTileProperty.getReadOnlyProperty();
+    }
+    
+    public ChessTile getChessTile() {
+        
+        return chessTileProperty.get();
+    }
+    
+    void setChessTile(final ChessTile chessTile) {
+        
+        chessTileProperty.set(chessTile);
+        
+    }
+    
+    @Override
+    protected void incrementMoveCount() {
+        
+        super.incrementMoveCount();
+        
+    }
+
+    boolean checkMove(final int sourceX, final int sourceY,
+                      final int destinationX, final int destinationY) {
+        
+        return type.checkMove(getGameBoard(), sourceX, sourceY, destinationX, destinationY, getGamePlayer().isPlayerOne());
     }
     
 }

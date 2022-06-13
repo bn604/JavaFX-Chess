@@ -1,13 +1,15 @@
 package game.chess;
 
 import game.GameBoard;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.event.EventType;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 
 import java.util.function.BiConsumer;
 
@@ -21,12 +23,28 @@ public final class ChessBoard
     public static final int CHESS_BOARD_LENGTH = 8;
     
     private final ChessTile[][] chessTiles = new ChessTile[CHESS_BOARD_LENGTH][CHESS_BOARD_LENGTH];
-
+    
+    private final ReadOnlyObjectWrapper<ChessTile> hoveringChessTileProperty = new ReadOnlyObjectWrapper<>();
+    
     private final ReadOnlyObjectWrapper<ChessTile> selectedChessTileProperty = new ReadOnlyObjectWrapper<>();
+    
+    private final ObjectBinding<ChessPlayer> currentPlayerProperty;
+    
+    private final BooleanBinding validMoveProperty;
+    
+    private static final Color INVALID_MOVE_HOVER_COLOR = Color.CADETBLUE;
+    
+    private static final Color VALID_MOVE_HOVER_COLOR = Color.ORANGE;
+    
+    private final InnerShadow hoveringTileEffect = new InnerShadow(25.0, null);
+    
+    private final InnerShadow selectedTileEffect = new InnerShadow(35.0, Color.MEDIUMPURPLE);
+    
+    private static final GaussianBlur PAUSED_EFFECT = new GaussianBlur(7.5);
     
     public ChessBoard() {
         
-        super(new GridPane());
+        super(new GridPane(), 0);
         
         final GridPane chessBoardPane = getNode();
         
@@ -65,15 +83,110 @@ public final class ChessBoard
             
         }
         
-        chessBoardPane.addEventFilter(EventType.ROOT, event -> {
-            
-            if (pausedProperty.get()) {
+        pausedProperty.addListener((observable, wasPaused, nowPaused) -> {
+
+            if (nowPaused) {
                 
-                event.consume();
+                getEffectTypes().add(PAUSED_EFFECT);
+                
+            } else {
+                
+                getEffectTypes().remove(PAUSED_EFFECT);
                 
             }
             
         });
+        
+        if (isPaused()) {
+            
+            getEffectTypes().add(PAUSED_EFFECT);
+            
+        }
+        
+        chessBoardPane.mouseTransparentProperty().bind(pausedProperty());
+        
+        chessBoardPane.hoverProperty().addListener((observable, wasHover, nowHover) -> {
+            
+            if (!nowHover) {
+                
+                hoveringChessTileProperty.set(null);
+                
+            }
+            
+        });
+        
+        hoveringChessTileProperty.addListener((observable, oldHoveringChessTile, newHoveringChessTile) -> {
+
+            if (oldHoveringChessTile != null) {
+
+                oldHoveringChessTile.getEffectTypes().remove(hoveringTileEffect);
+
+            }
+
+            if (newHoveringChessTile != null) {
+
+                newHoveringChessTile.getEffectTypes().add(hoveringTileEffect);
+
+            }
+
+        });
+        
+        selectedChessTileProperty.addListener((observable, oldSelectedChessTile, newSelectedChessTile) -> {
+            
+            if (oldSelectedChessTile != null) {
+                
+                oldSelectedChessTile.getEffectTypes().remove(selectedTileEffect);
+                
+            }
+            
+            if (newSelectedChessTile != null) {
+                
+                newSelectedChessTile.getEffectTypes().add(0, selectedTileEffect);
+                
+            }
+            
+        });
+        
+        validMoveProperty = new BooleanBinding() {
+            
+            { super.bind(hoveringChessTileProperty, selectedChessTileProperty); }
+            
+            @Override
+            protected boolean computeValue() {
+                
+                final ChessTile selectedChessTile = getSelectedChessTile();
+
+                final ChessTile destinationChessTile = getHoveringChessTile();
+                
+                if ((selectedChessTile == null)
+                        || (destinationChessTile == null)) {
+                    
+                    return false;
+                    
+                }
+                
+                return selectedChessTile.getChessPiece().checkMove(
+                        selectedChessTile.getX(), selectedChessTile.getY(),
+                        destinationChessTile.getX(), destinationChessTile.getY());
+            }
+            
+        };
+        
+        hoveringTileEffect.getFXEffect().setColor(validMoveProperty.get() ? VALID_MOVE_HOVER_COLOR : INVALID_MOVE_HOVER_COLOR);
+        
+        validMoveProperty.addListener((observable, wasValidMove, nowValidMove) -> hoveringTileEffect.getFXEffect().setColor(nowValidMove ? VALID_MOVE_HOVER_COLOR : INVALID_MOVE_HOVER_COLOR));
+        
+        currentPlayerProperty = new ObjectBinding<>() {
+
+            { super.bind(turnCountProperty); }
+
+            @Override
+            protected ChessPlayer computeValue() {
+
+                return (getTurnCount() % 2 == 0) ? getChessPlayerOne() : getChessPlayerTwo();
+            }
+
+        };
         
         // Board pieces setup:
         
@@ -87,7 +200,11 @@ public final class ChessBoard
             
             final var chessPiece = new ChessPiece(ChessBoard.this, chessPlayer, playerTypePair.chessPieceType);
             
-            chessTiles[coordinate.x][coordinate.y].setChessPiece(chessPiece);
+            final ChessTile chessTile = chessTiles[coordinate.x][coordinate.y];
+            
+            chessTile.setChessPiece(chessPiece);
+            
+            chessPiece.setChessTile(chessTile);
             
             chessPlayer.getGamePieces().add(chessPiece);
             
@@ -160,6 +277,22 @@ public final class ChessBoard
         return chessTiles[x][y];
     }
     
+    public ReadOnlyObjectProperty<ChessTile> hoveringChessTileProperty() {
+        
+        return hoveringChessTileProperty.getReadOnlyProperty();
+    }
+    
+    public ChessTile getHoveringChessTile() {
+        
+        return hoveringChessTileProperty.get();
+    }
+    
+    void setHoveringChessTile(final ChessTile hoveringChessTile) {
+        
+        hoveringChessTileProperty.set(hoveringChessTile);
+        
+    }
+    
     public ReadOnlyObjectProperty<ChessTile> selectedChessTileProperty() {
         
         return selectedChessTileProperty.getReadOnlyProperty();
@@ -178,9 +311,83 @@ public final class ChessBoard
         
     }
     
+    public ObjectBinding<ChessPlayer> currentPlayerProperty() {
+        
+        return currentPlayerProperty;
+    }
+    
+    public ChessPlayer getCurrentChessPlayer() {
+        
+        return currentPlayerProperty.get();
+    }
+    
     private ChessTile handleSelection(final ChessTile oldSelectedChessTile, final ChessTile newSelectedChessTile) {
         
-        return newSelectedChessTile;
+        // newSelectedChessTile should always be non-null here
+        
+        final ChessPiece newTileChessPiece = newSelectedChessTile.getChessPiece();
+        
+        if (oldSelectedChessTile == newSelectedChessTile) {
+            
+            // Deselect selected chess tile
+            
+            return null;
+            
+        } else if (oldSelectedChessTile == null) {
+            
+            if ((newTileChessPiece != null)
+                    && (newTileChessPiece.getGamePlayer() == getCurrentChessPlayer())) {
+
+                // Selecting a piece that belongs to current player
+                
+                return newSelectedChessTile;
+                
+            } else {
+                
+                // Piece doesn't belong to current player
+                
+                return null;
+                
+            }
+            
+        }
+        
+        // oldSelectedChessTile.getChessPiece() should always be non-null here
+        
+        if ((newTileChessPiece != null)
+                && (newSelectedChessTile.getChessPiece().getGamePlayer() == getCurrentChessPlayer())) {
+            
+            return newSelectedChessTile;
+            
+        } else if (validMoveProperty.get()) {
+
+            final ChessPlayer currentChessPlayer = getCurrentChessPlayer();
+            
+            final ChessPiece movingChessPiece = oldSelectedChessTile.getChessPiece();
+            
+            oldSelectedChessTile.setChessPiece(null);
+
+            if (newTileChessPiece != null) {
+
+                currentChessPlayer.getCapturedPieces().add(newTileChessPiece);
+                
+                newTileChessPiece.setChessTile(null);
+                
+            }
+            
+            newSelectedChessTile.setChessPiece(movingChessPiece);
+            
+            movingChessPiece.setChessTile(newSelectedChessTile);
+            
+            movingChessPiece.incrementMoveCount();
+            
+            incrementTurnCount();
+            
+            return null;
+            
+        }
+        
+        return oldSelectedChessTile;
     }
     
 }

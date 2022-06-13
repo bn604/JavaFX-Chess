@@ -5,12 +5,40 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.effect.Effect;
+import javafx.scene.effect.GaussianBlur;
 import javafx.scene.paint.Color;
 
 import java.util.Iterator;
 
 public abstract class GameWidget<T extends Node> {
+    
+    public static final class GaussianBlur
+            extends EffectType {
+        
+        private final javafx.scene.effect.GaussianBlur fxGaussianBlur;
+        
+        public GaussianBlur(final double radius) {
+            
+            fxGaussianBlur = new javafx.scene.effect.GaussianBlur(radius);
+            
+        }
+        
+        @Override
+        public Effect getFXEffect() {
+            
+            return fxGaussianBlur;
+        }
 
+        @Override
+        public Effect chainEffect(final Effect effect) {
+            
+            fxGaussianBlur.setInput(effect);
+            
+            return fxGaussianBlur;
+        }
+        
+    }
+    
     public static final class Bloom
             extends EffectType {
 
