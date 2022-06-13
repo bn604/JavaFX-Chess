@@ -1,6 +1,6 @@
 package core;
 
-import chess.ChessBoard;
+import game.chess.ChessBoard;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -23,8 +23,8 @@ public final class Main
     public void start(final Stage primaryStage)
             throws IOException {
 
-        final ChessBoard chessboard = new ChessBoard();
-
+        final var chessboard = new ChessBoard();
+        
         final Scene scene = new Scene(new StackPane());
         
         final var fxmlLoader = new FXMLLoader(Main.class.getResource("chess.fxml"));
@@ -35,7 +35,7 @@ public final class Main
         
         scene.setRoot(root);
         
-        final GridPane chessboardWidget = chessboard.getChessBoardWidget();
+        final GridPane chessboardWidget = chessboard.getNode();
         
         root.getChildren().add(0, chessboardWidget);
         
@@ -48,10 +48,7 @@ public final class Main
         final double width = 800.0;
         final double height = 600.0;
 
-        chessboardWidget.prefWidthProperty().set(width);
-        chessboardWidget.prefHeightProperty().set(height);
-        
-        primaryStage.setTitle("Chess");
+        chessboardWidget.setPrefSize(width, height);
         
         primaryStage.setWidth(width + padding);
         primaryStage.setHeight(height + padding);
