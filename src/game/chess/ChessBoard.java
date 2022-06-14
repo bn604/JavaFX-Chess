@@ -1,15 +1,19 @@
 package game.chess;
 
 import game.GameBoard;
+import javafx.animation.TranslateTransition;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.util.Duration;
 
 import java.util.function.BiConsumer;
 
@@ -40,6 +44,10 @@ public final class ChessBoard
     
     private final InnerShadow selectedTileEffect = new InnerShadow(35.0, Color.MEDIUMPURPLE);
     
+    private boolean pieceAnimating = false;
+
+    private final TranslateTransition pieceTransition = new TranslateTransition(Duration.millis(500));
+
     private static final GaussianBlur PAUSED_EFFECT = new GaussianBlur(7.5);
     
     public ChessBoard() {
@@ -154,23 +162,24 @@ public final class ChessBoard
             @Override
             protected boolean computeValue() {
                 
-                final ChessTile selectedChessTile = getSelectedChessTile();
+                final ChessTile sourceChessTile = getSelectedChessTile();
 
                 final ChessTile destinationChessTile = getHoveringChessTile();
                 
-                if ((selectedChessTile == null)
-                        || (destinationChessTile == null)) {
+                if ((sourceChessTile == null)
+                        || (destinationChessTile == null)
+                        || (sourceChessTile == destinationChessTile)) {
                     
                     return false;
                     
                 }
                 
-                return selectedChessTile.getChessPiece().checkMove(
-                        selectedChessTile.getX(), selectedChessTile.getY(),
-                        destinationChessTile.getX(), destinationChessTile.getY());
+                return sourceChessTile.getChessPiece().checkMove(sourceChessTile, destinationChessTile);
             }
             
         };
+        
+        chessBoardPane.cacheProperty().bind(pausedProperty());
         
         hoveringTileEffect.getFXEffect().setColor(validMoveProperty.get() ? VALID_MOVE_HOVER_COLOR : INVALID_MOVE_HOVER_COLOR);
         
@@ -305,9 +314,13 @@ public final class ChessBoard
     
     void setSelectedChessTile(final ChessTile chessTile) {
         
-        final ChessTile newSelectedChessTile = handleSelection(selectedChessTileProperty.get(), chessTile);
-        
-        selectedChessTileProperty.set(newSelectedChessTile);
+        if (!pieceAnimating) {
+
+            final ChessTile newSelectedChessTile = handleSelection(selectedChessTileProperty.get(), chessTile);
+
+            selectedChessTileProperty.set(newSelectedChessTile);
+            
+        }
         
     }
     
@@ -360,28 +373,67 @@ public final class ChessBoard
             return newSelectedChessTile;
             
         } else if (validMoveProperty.get()) {
-
-            final ChessPlayer currentChessPlayer = getCurrentChessPlayer();
             
+            pieceAnimating = true;
+            
+            final Point2D from = oldSelectedChessTile.getNode().localToParent(0.0, 0.0);
+            
+            pieceTransition.setFromX(from.getX());
+            pieceTransition.setFromY(from.getY());
+
+            final Point2D to = newSelectedChessTile.getNode().localToParent(0.0, 0.0);
+
+            pieceTransition.setToX(to.getX());
+            pieceTransition.setToY(to.getY());
+            
+            final ChessPlayer currentChessPlayer = getCurrentChessPlayer();
+
             final ChessPiece movingChessPiece = oldSelectedChessTile.getChessPiece();
             
+            final Node movingChessPieceNode = movingChessPiece.getNode();
+            
+            pieceTransition.setNode(movingChessPieceNode);
+
+            movingChessPieceNode.setViewOrder(-2);
+            
+            movingChessPieceNode.setManaged(false);
+            
+            getNode().getChildren().add(movingChessPieceNode);
+            
+            movingChessPiece.setChessTile(null);
+            
             oldSelectedChessTile.setChessPiece(null);
-
-            if (newTileChessPiece != null) {
-
-                currentChessPlayer.getCapturedPieces().add(newTileChessPiece);
+            
+            pieceTransition.setOnFinished(actionEvent -> {
                 
-                newTileChessPiece.setChessTile(null);
+                movingChessPieceNode.setViewOrder(-1);
+
+                movingChessPieceNode.setManaged(true);
                 
-            }
-            
-            newSelectedChessTile.setChessPiece(movingChessPiece);
-            
-            movingChessPiece.setChessTile(newSelectedChessTile);
-            
-            movingChessPiece.incrementMoveCount();
-            
-            incrementTurnCount();
+                movingChessPieceNode.setTranslateX(0.0);
+                movingChessPieceNode.setTranslateY(0.0);
+                
+                if (newTileChessPiece != null) {
+
+                    currentChessPlayer.getCapturedPieces().add(newTileChessPiece);
+
+                    newTileChessPiece.setChessTile(null);
+
+                }
+
+                newSelectedChessTile.setChessPiece(movingChessPiece);
+
+                movingChessPiece.setChessTile(newSelectedChessTile);
+
+                movingChessPiece.incrementMoveCount();
+
+                incrementTurnCount();
+
+                pieceAnimating = false;
+                
+            });
+
+            pieceTransition.playFromStart();
             
             return null;
             
