@@ -1,6 +1,9 @@
 package game.chess;
 
 import game.GameBoard;
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.animation.TranslateTransition;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.DoubleBinding;
@@ -32,7 +35,7 @@ public final class ChessBoard
     
     private final ReadOnlyObjectWrapper<ChessTile> selectedChessTileProperty = new ReadOnlyObjectWrapper<>();
     
-    private final ObjectBinding<ChessPlayer> currentPlayerProperty;
+    private final ObjectBinding<ChessPlayer> currentChessPlayerProperty;
     
     private final BooleanBinding validMoveProperty;
     
@@ -47,8 +50,10 @@ public final class ChessBoard
     private boolean pieceAnimating = false;
 
     private final TranslateTransition pieceTransition = new TranslateTransition(Duration.millis(500));
-
-    private static final GaussianBlur PAUSED_EFFECT = new GaussianBlur(7.5);
+    
+    private static final double PAUSED_EFFECT_RADIUS = 5.0;
+    
+    private static final GaussianBlur PAUSED_EFFECT = new GaussianBlur(PAUSED_EFFECT_RADIUS);
     
     public ChessBoard() {
         
@@ -184,8 +189,8 @@ public final class ChessBoard
         hoveringTileEffect.getFXEffect().setColor(validMoveProperty.get() ? VALID_MOVE_HOVER_COLOR : INVALID_MOVE_HOVER_COLOR);
         
         validMoveProperty.addListener((observable, wasValidMove, nowValidMove) -> hoveringTileEffect.getFXEffect().setColor(nowValidMove ? VALID_MOVE_HOVER_COLOR : INVALID_MOVE_HOVER_COLOR));
-        
-        currentPlayerProperty = new ObjectBinding<>() {
+
+        currentChessPlayerProperty = new ObjectBinding<>() {
 
             { super.bind(turnCountProperty); }
 
@@ -271,6 +276,28 @@ public final class ChessBoard
         
     }
     
+    public static final int START_ANIMATION_MILLISECONDS = 100;
+    
+    @Override
+    public void startGame() {
+        
+        checkStarted();
+        
+        final var startGameAnimation = new Timeline(60.0, new KeyFrame(Duration.millis(START_ANIMATION_MILLISECONDS),
+                new KeyValue(PAUSED_EFFECT.getFXEffect().radiusProperty(), 0.0)));
+        
+        startGameAnimation.setOnFinished(actionEvent -> {
+
+            super.startGame();
+            
+            PAUSED_EFFECT.getFXEffect().setRadius(PAUSED_EFFECT_RADIUS);
+            
+        });
+        
+        startGameAnimation.playFromStart();
+        
+    }
+
     public ChessPlayer getChessPlayerOne() {
         
         return gamePlayers.get(CHESS_PLAYER_ONE_INDEX);
@@ -324,14 +351,14 @@ public final class ChessBoard
         
     }
     
-    public ObjectBinding<ChessPlayer> currentPlayerProperty() {
+    public ObjectBinding<ChessPlayer> currentChessPlayerProperty() {
         
-        return currentPlayerProperty;
+        return currentChessPlayerProperty;
     }
     
     public ChessPlayer getCurrentChessPlayer() {
         
-        return currentPlayerProperty.get();
+        return currentChessPlayerProperty.get();
     }
     
     private ChessTile handleSelection(final ChessTile oldSelectedChessTile, final ChessTile newSelectedChessTile) {

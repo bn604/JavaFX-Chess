@@ -25,7 +25,7 @@ public final class Main
 
         final var chessboard = new ChessBoard();
         
-        final Scene scene = new Scene(new StackPane());
+        final var scene = new Scene(new StackPane());
         
         final var fxmlLoader = new FXMLLoader(Main.class.getResource("chess.fxml"));
         
@@ -43,15 +43,19 @@ public final class Main
         
         primaryStage.setScene(scene);
         
-        final double padding = 100.0;
+        final double widthPadding = 250.0;
+        final double heightPadding = 100.0;
         
         final double width = 800.0;
         final double height = 600.0;
-
+        
         chessboardWidget.setPrefSize(width, height);
         
-        primaryStage.setWidth(width + padding);
-        primaryStage.setHeight(height + padding);
+        primaryStage.setWidth(width + widthPadding);
+        primaryStage.setHeight(height + heightPadding);
+        
+        primaryStage.setMinWidth(width);
+        primaryStage.setMinHeight(height + 30.0);
         
         primaryStage.centerOnScreen();
         

@@ -1,5 +1,6 @@
-#root {
+#overlay-root {
     
+    -fx-font-family: Galvji;
     -fx-background-color: rgb(65, 47, 47);
     
 }
@@ -16,6 +17,13 @@
 
     -fx-background-color: rgb(122, 120, 114);
 
+}
+
+.overlay-label {
+
+    -fx-font-size: 25;
+    -fx-background-color: rgb(236, 204, 204);
+    
 }
 
 .white-chess-tile {

@@ -24,7 +24,7 @@ public abstract class GameWidget<T extends Node> {
         }
         
         @Override
-        public Effect getFXEffect() {
+        public javafx.scene.effect.GaussianBlur getFXEffect() {
             
             return fxGaussianBlur;
         }

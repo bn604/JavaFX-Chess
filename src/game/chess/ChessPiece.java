@@ -13,7 +13,7 @@ public final class ChessPiece
     
     public enum Type {
 
-        PAWN {
+        PAWN("Pawn") {
             
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
@@ -48,7 +48,7 @@ public final class ChessPiece
 
         },
 
-        ROOK {
+        ROOK("Rook") {
 
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
@@ -112,7 +112,7 @@ public final class ChessPiece
 
         },
 
-        FLIP_ROOK {
+        FLIP_ROOK("Flip Rook") {
 
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
@@ -123,7 +123,7 @@ public final class ChessPiece
 
         },
 
-        KNIGHT {
+        KNIGHT("Knight") {
 
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
@@ -134,7 +134,7 @@ public final class ChessPiece
 
         },
 
-        BISHOP {
+        BISHOP("Bishop") {
 
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
@@ -145,7 +145,7 @@ public final class ChessPiece
 
         },
 
-        QUEEN {
+        QUEEN("Queen") {
 
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
@@ -157,7 +157,7 @@ public final class ChessPiece
 
         },
 
-        KING {
+        KING("King") {
             
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
@@ -185,8 +185,10 @@ public final class ChessPiece
         private final Image playerOneImage;
 
         private final Image playerTwoImage;
-
-        Type() {
+        
+        private final String displayName;
+        
+        Type(final String displayName) {
 
             final String name = name()
                     .toLowerCase()
@@ -195,12 +197,19 @@ public final class ChessPiece
             playerOneImage = new Image(ChessPiece.class.getResource("images/" + name + "-player-1.png").toExternalForm(), true);
 
             playerTwoImage = new Image(ChessPiece.class.getResource("images/" + name + "-player-2.png").toExternalForm(), true);
-
+            
+            this.displayName = displayName;
+            
         }
 
         private Image getImage(final boolean playerOne) {
 
             return playerOne ? playerOneImage : playerTwoImage;
+        }
+
+        public final String getDisplayName() {
+
+            return displayName;
         }
 
         protected abstract boolean checkMove(final ChessBoard chessBoard,
@@ -267,6 +276,12 @@ public final class ChessPiece
         }
         
         return type.checkMove(getGameBoard(), sourceTile, destinationTile);
+    }
+
+    @Override
+    public String toString() {
+        
+        return String.format("Player %d %s", gamePlayer.isPlayerOne() ? 1 : 2, type);
     }
     
 }
