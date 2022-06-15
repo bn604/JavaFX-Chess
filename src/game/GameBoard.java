@@ -10,6 +10,10 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiConsumer;
+
 public abstract class GameBoard<P extends GamePlayer<?>, T extends Node>
         extends GameWidget<T> {
     
@@ -38,10 +42,15 @@ public abstract class GameBoard<P extends GamePlayer<?>, T extends Node>
     
     protected final ReadOnlyIntegerWrapper turnCountProperty;
     
+    private static final BiConsumer DEFAULT_ON_GAME_END = (BiConsumer<Object, Object>) (o, o2) -> {};
+    
+    @SuppressWarnings("unchecked")
+    private BiConsumer<Set<P>, Set<P>> onGameEnd = DEFAULT_ON_GAME_END;
+    
     protected GameBoard(final T node, final int initialTurn) {
         
         super(node);
-
+        
         turnCountProperty = new ReadOnlyIntegerWrapper(initialTurn);
         
     }
@@ -103,6 +112,19 @@ public abstract class GameBoard<P extends GamePlayer<?>, T extends Node>
     protected final void incrementTurnCount() {
         
         turnCountProperty.set(turnCountProperty.get() + 1);
+        
+    }
+
+    @SuppressWarnings("unchecked")
+    public final void setOnGameEnd(final BiConsumer<Set<P>, Set<P>> onGameEnd) {
+        
+        this.onGameEnd = Objects.requireNonNullElse(onGameEnd, DEFAULT_ON_GAME_END);
+        
+    }
+    
+    protected final void runOnGameEnd(final Set<P> winners, final Set<P> losers) {
+        
+        onGameEnd.accept(winners, losers);
         
     }
     

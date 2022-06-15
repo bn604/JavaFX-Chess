@@ -117,8 +117,10 @@ public final class ChessPiece
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
                                         final ChessTile sourceTile, final ChessTile destinationTile) {
-
-                return ROOK.checkMove(chessBoard, sourceTile, destinationTile);
+                
+                // TODO
+                
+                return false;
             }
 
         },
@@ -128,6 +130,24 @@ public final class ChessPiece
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
                                         final ChessTile sourceTile, final ChessTile destinationTile) {
+                
+                final int srcX = sourceTile.getX();
+                final int srcY = sourceTile.getY();
+
+                final int destX = destinationTile.getX();
+                final int destY = destinationTile.getY();
+                
+                if ((destX == (srcX + 1)) || (destX == (srcX - 1))) {
+
+                    return (destY == (srcY + 2))
+                            || (destY == (srcY - 2));
+                    
+                } else if ((destY == (srcY + 1)) || (destY == (srcY - 1))) {
+
+                    return (destX == (srcX + 2))
+                            || (destX == (srcX - 2));
+                    
+                }
                 
                 return false;
             }
@@ -139,8 +159,74 @@ public final class ChessPiece
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
                                         final ChessTile sourceTile, final ChessTile destinationTile) {
+                
+                final int srcX = sourceTile.getX();
+                final int srcY = sourceTile.getY();
+                
+                final int destX = destinationTile.getX();
+                final int destY = destinationTile.getY();
 
-                return false;
+                final int xDistance = Math.abs(destX - srcX);
+                final int yDistance = Math.abs(destY - srcY);
+                
+                if (xDistance != yDistance) {
+                    
+                    return false;
+                    
+                }
+                
+                final int minX;
+                final int maxX;
+                
+                if (srcX < destX) {
+                    
+                    minX = srcX + 1;
+                    
+                    maxX = destX - 1;
+                    
+                } else {
+                    
+                    minX = destX + 1;
+                    
+                    maxX = srcX - 1;
+                    
+                }
+
+                final int minY;
+                final int maxY;
+
+                if (srcY < destY) {
+
+                    minY = srcY + 1;
+
+                    maxY = destY - 1;
+
+                } else {
+
+                    minY = destY + 1;
+
+                    maxY = srcY - 1;
+
+                }
+                
+                int x = minX;
+                int y = minY;
+                
+                while ((x <= maxX)
+                        || (y <= maxY)) {
+                    
+                    if (piecePresent(chessBoard, x, y)) {
+                        
+                        return false;
+                        
+                    }
+                    
+                    x++;
+                    y++;
+                    
+                }
+                
+                return true;
             }
 
         },
@@ -162,8 +248,17 @@ public final class ChessPiece
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
                                         final ChessTile sourceTile, final ChessTile destinationTile) {
-                
-                return false;
+
+                final int srcX = sourceTile.getX();
+                final int srcY = sourceTile.getY();
+
+                final int destX = destinationTile.getX();
+                final int destY = destinationTile.getY();
+
+                return ((destX == (srcX - 1))
+                        || (destX == (srcX + 1))
+                        || (destX == srcX))
+                        && (Math.abs(destY - srcY) <= 1);
             }
             
         };
@@ -231,9 +326,7 @@ public final class ChessPiece
         
         chessPieceNode.setViewOrder(-1);
         
-        chessPieceNode.setCache(true);
-        
-        chessPieceNode.getStyleClass().add("chess-tile");
+        chessPieceNode.getStyleClass().add("chess-piece");
         
     }
 
