@@ -5,9 +5,12 @@ import game.chess.ChessPiece;
 import game.chess.ChessPlayer;
 import game.chess.ChessTile;
 import javafx.animation.FadeTransition;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -36,7 +39,9 @@ final class Controller {
     
     private final Set<KeyCode> pressedKeys = EnumSet.noneOf(KeyCode.class);
     
-    private final BooleanProperty overlayVisibleProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty oPressedProperty = new SimpleBooleanProperty(false);
+
+    private BooleanBinding overlayVisibleBinding;
     
     @FXML
     private Button startGameButton;
@@ -78,9 +83,23 @@ final class Controller {
             
         });
         
+        final ObjectProperty<ChessPiece> hoveringChessPieceProperty = new SimpleObjectProperty<>(null);
+        
+        chessBoard.hoveringChessTileProperty().addListener((observable, oldHoveringChessTile, newHoveringChessTile) -> {
+            
+            if (newHoveringChessTile != null) {
+
+                hoveringChessPieceProperty.bind(newHoveringChessTile.chessPieceProperty());
+                
+            }
+            
+        });
+        
+        hoveringChessPieceProperty.addListener((observable, oldValue, newValue) -> {});
+        
         pieceLabel.textProperty().bind(new ObjectBinding<>() {
 
-            { super.bind(chessBoard.hoveringChessTileProperty()); }
+            { super.bind(chessBoard.hoveringChessTileProperty(), hoveringChessPieceProperty); }
             
             @Override
             protected String computeValue() {
@@ -101,7 +120,7 @@ final class Controller {
                     
                 }
 
-                return nameFunction.apply(hoveringChessPiece.getGamePlayer()) + " " + hoveringChessPiece.getType().getDisplayName();
+                return nameFunction.apply(hoveringChessPiece.getGamePlayer()) + " " + hoveringChessPiece.getType();
             }
             
         });
@@ -112,16 +131,16 @@ final class Controller {
         
         startButtonFade.setOnFinished(actionEvent -> {
             
-            overlayVisibleProperty.set(true);
-            
             startGameButton.setVisible(false);
 
             chessBoard.startGame();
             
         });
         
-        playerLabel.visibleProperty().bind(overlayVisibleProperty);
-        pieceLabel.visibleProperty().bind(overlayVisibleProperty);
+        overlayVisibleBinding = oPressedProperty.not().and(chessBoard.pausedProperty().not());
+        
+        playerLabel.visibleProperty().bind(overlayVisibleBinding);
+        pieceLabel.visibleProperty().bind(overlayVisibleBinding.and(pieceLabel.textProperty().isNotEmpty()));
         
         startGameButton.setOnAction(actionEvent -> startButtonFade.playFromStart());
         
@@ -135,7 +154,15 @@ final class Controller {
                 
                 case E -> chessBoard.setPaused(!chessBoard.isPaused());
                 
-                case O -> overlayVisibleProperty.set(!overlayVisibleProperty.get());
+                case O -> {
+                    
+                    if (!chessBoard.isPaused()) {
+
+                        oPressedProperty.set(!oPressedProperty.get());
+                        
+                    }
+                    
+                }
                 
             }
             

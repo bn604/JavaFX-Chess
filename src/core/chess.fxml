@@ -8,12 +8,12 @@
 <StackPane id="overlay-root" fx:id="overlayRoot" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <Button id="start-game-button" fx:id="startGameButton" mnemonicParsing="false" text="Start game" />
-      <Label id="player-label" fx:id="playerLabel" styleClass="overlay-label" text="Player" StackPane.alignment="TOP_RIGHT">
+      <Label id="player-label" fx:id="playerLabel" mouseTransparent="true" styleClass="overlay-label" text="Player" StackPane.alignment="TOP_RIGHT">
          <StackPane.margin>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </StackPane.margin>
       </Label>
-      <Label id="piece-label" fx:id="pieceLabel" styleClass="overlay-label" text="Piece" StackPane.alignment="TOP_LEFT">
+      <Label id="piece-label" fx:id="pieceLabel" mouseTransparent="true" styleClass="overlay-label" text="Piece" StackPane.alignment="TOP_LEFT">
          <StackPane.margin>
             <Insets bottom="15.0" left="15.0" right="15.0" top="15.0" />
          </StackPane.margin>

@@ -160,14 +160,14 @@ public final class ChessPiece
             protected boolean checkMove(final ChessBoard chessBoard,
                                         final ChessTile sourceTile, final ChessTile destinationTile) {
                 
-                final int srcX = sourceTile.getX();
-                final int srcY = sourceTile.getY();
+                int currentX = sourceTile.getX();
+                int currentY = sourceTile.getY();
                 
-                final int destX = destinationTile.getX();
-                final int destY = destinationTile.getY();
+                final int destinationX = destinationTile.getX();
+                final int destinationY = destinationTile.getY();
 
-                final int xDistance = Math.abs(destX - srcX);
-                final int yDistance = Math.abs(destY - srcY);
+                final int xDistance = Math.abs(destinationX - currentX);
+                final int yDistance = Math.abs(destinationY - currentY);
                 
                 if (xDistance != yDistance) {
                     
@@ -175,56 +175,44 @@ public final class ChessPiece
                     
                 }
                 
-                final int minX;
-                final int maxX;
+                boolean done = false;
                 
-                if (srcX < destX) {
+                do {
+
+                    if (currentX < destinationX) {
+
+                        currentX++;
+
+                    } else {
+
+                        currentX--;
+
+                    }
                     
-                    minX = srcX + 1;
+                    if (currentY < destinationY) {
+
+                        currentY++;
+
+                    } else {
+
+                        currentY--;
+
+                    }
                     
-                    maxX = destX - 1;
-                    
-                } else {
-                    
-                    minX = destX + 1;
-                    
-                    maxX = srcX - 1;
-                    
-                }
+                    if ((currentX == destinationX)
+                            || (currentY == destinationY)) {
 
-                final int minY;
-                final int maxY;
-
-                if (srcY < destY) {
-
-                    minY = srcY + 1;
-
-                    maxY = destY - 1;
-
-                } else {
-
-                    minY = destY + 1;
-
-                    maxY = srcY - 1;
-
-                }
-                
-                int x = minX;
-                int y = minY;
-                
-                while ((x <= maxX)
-                        || (y <= maxY)) {
-                    
-                    if (piecePresent(chessBoard, x, y)) {
-                        
-                        return false;
+                        done = true;
                         
                     }
                     
-                    x++;
-                    y++;
-                    
-                }
+                    if (!done && piecePresent(chessBoard, currentX, currentY)) {
+
+                        return false;
+
+                    }
+
+                } while (!done);
                 
                 return true;
             }
@@ -232,7 +220,7 @@ public final class ChessPiece
         },
 
         QUEEN("Queen") {
-
+            
             @Override
             protected boolean checkMove(final ChessBoard chessBoard,
                                         final ChessTile sourceTile, final ChessTile destinationTile) {
@@ -309,6 +297,12 @@ public final class ChessPiece
 
         protected abstract boolean checkMove(final ChessBoard chessBoard,
                                              final ChessTile sourceTile, final ChessTile destinationTile);
+        
+        @Override
+        public String toString() {
+            
+            return displayName;
+        }
         
     }
     

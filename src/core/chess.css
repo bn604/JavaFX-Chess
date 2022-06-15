@@ -20,7 +20,8 @@
 }
 
 .overlay-label {
-
+    
+    -fx-padding: 5;
     -fx-font-size: 25;
     -fx-background-color: rgb(236, 204, 204);
     
